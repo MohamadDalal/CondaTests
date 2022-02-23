@@ -1,0 +1,6 @@
+Python libraires:
+pandas
+seaborn
+scipy
+numpy
+matplotlib
