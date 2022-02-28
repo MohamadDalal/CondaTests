@@ -279,7 +279,7 @@ class ClusterSampler():
                 StdDivLabels.append(4)
         for i in range(len(self.Corrs)):
             Val = self.Corrs[i][Round]
-            Cluster = int(abs(np.floor(Val*4.9999)))        # Mapping from [0,1] to [0,5] for assigning clusters
+            Cluster = int(np.floor(abs(Val*4.9999)))        # Mapping from [0,1] to [0,5] for assigning clusters
             CorrCluster[Cluster].update({self.ObjPop.DataCols[i]:Val})
             CorrLabels.append(Cluster + 1)
         return MeanCluster, StdDivCluster, CorrCluster, MeanLabels, StdDivLabels, CorrLabels

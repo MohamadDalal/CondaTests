@@ -19,69 +19,54 @@ def makeDF(List, Cols=None):
         #print(DF)
         return DF
 
-def multiRound(Object:ClusterSampler,Iterations:int, SampleSize:int, PopSize:int):
+# Function used to run multiple sampling rounds
+def multiRound(Object:ClusterSampler, Iterations:int, SampleSize:int, SubSetSize:int):
     for i in range(Iterations):
-        Object.run(SampleSize, PopSize)
+        Object.run(SampleSize, SubSetSize)
 
 #Run to create populations and take samples from it
-def test():
-    StartTime = perf_counter()
-    Pop = ClusterPopulations(1000000)
-    PopTime = perf_counter()
-    print(f'Population created in {PopTime-StartTime}\n'
-          f'Time since start {PopTime-StartTime}')
-    Sampler = ClusterSampler(Pop)
-    multiRound(Sampler, 100, 100, 10000)
-    SampleTime = perf_counter()
-    print(f'Sample done in {SampleTime - PopTime}\n'
-          f'Time since start {SampleTime - StartTime}')
-    Ting = (_,_,_,_,_,_) = Sampler.ClusterAll()
-    ClusterTime = perf_counter()
-    print(f'Clustering done in {ClusterTime - SampleTime}\n'
-          f'Time since start {ClusterTime - StartTime}')
-    return [Pop, Sampler, Ting]
-
-def test2(epsilon = 0.005):
+def test(epsilon = 0.01, SampleSize = 1, SubSetSize = 10):
     StartTime = perf_counter()
     Pop = ClusterPopulations(1000000)
     PopTime = perf_counter()
     print(f'Population created in {PopTime - StartTime}\n'
           f'Time since start {PopTime - StartTime}')
     Sampler = ClusterSampler(Pop)
-    Sampler.runUntilConverge(epsilon, 100, 1000)
-    # Sampler.QuickRun(100, 10000)
+    Sampler.runUntilConverge(epsilon, SampleSize, SubSetSize)
     SampleTime = perf_counter()
     print(f'Sample done in {SampleTime - PopTime}\n'
           f'Time since start {SampleTime - StartTime}')
-    Ting = (_, _, _, _, _, _) = Sampler.ClusterAll()
-    ClusterTime = perf_counter()
-    print(f'Clustering done in {ClusterTime - SampleTime}\n'
-          f'Time since start {ClusterTime - StartTime}')
-    return [Pop, Sampler, Ting]
+    print(f'Finish time {SampleTime - StartTime}')
+    return [Pop, Sampler]
 
 
 # Function used to plot line plots for each list of correlations alone
+# Arguments (Dataframe of correlation data to be used, Column names of data to be used,
+#           Population object for getting true correlation data, save path, bool specifying if to save or not)
+# Dataframe is usually made using makeDF(Correlations lists, Data columns)
+# Data Columns are in population object
 def plotAllLine(DF, Columns, PopObj:ClusterPopulations, SavePath = "", Save = False):
-    #plt.rc("font", size=12)
     AxesList = []
     for i in range(1,len(Columns)):
         ax = sns.lineplot(data=DF, x=DF.index, y=Columns[i])
         RealCorr = PopObj.Corr[i]
         Correlation = DF.iloc[-1, i]
-        #print(f'Adding line at {DF.iloc[-5, i] - 0.0005}')
         ax.text(0.70, 1.03, f"Approx Corr: {Correlation:.3f}", transform=ax.transAxes)
         ax.text(0, 1.03, f"Real Corr: {RealCorr:.3f}", transform=ax.transAxes)
         ax.axhline(RealCorr, 0, 1, color="r")
-        #ax.axhline(DF.iloc[-5, i] + 0.0005, 0.5, 1)
         AxesList.append(ax)
         if Save and (len(SavePath) > 0):
-            plt.pyplot.savefig(f'SavePath{i}')
+            print(f'Saving figure {i}')
+            plt.pyplot.savefig(f'{SavePath}{i}.png')
         plt.pyplot.show()
     return AxesList
 
 # Function used to plot scatter plots for all combinations of random variables
+# Arguments (Dataframe of data to be used, Column names of data to be used,
+#           Cluster sampler for getting approx correlation data, save path, bool specifying if to save or not)
+# Dataframe is usually made using makeDF(Data lists, Data columns)
+# Data Columns are in population object
 def plotAllScatter(DF,Columns, Obj:ClusterSampler = None, SavePath = "", Save = False):
-    #plt.rc("font", size=12)
     AxesList = []
     for i in range(1,len(Columns)):
         ax = sns.scatterplot(data=DF, x=Columns[0], y=Columns[i])
@@ -90,12 +75,13 @@ def plotAllScatter(DF,Columns, Obj:ClusterSampler = None, SavePath = "", Save = 
             ax.text(0, 1.03, f"Correlation: {Correlation:.3f}", transform=ax.transAxes)
         AxesList.append(ax)
         if Save and (len(SavePath) > 0):
-            plt.pyplot.savefig(f'SavePath{i}')
+            plt.pyplot.savefig(f'{SavePath}{i}.png')
         plt.pyplot.show()
     return AxesList
 
+# Function used to plot scatter plots for all combinations of random variables
+# Arguments same as plotAllScatter()
 def plotAllReg(DataDF,Columns, Obj:ClusterSampler = None, SavePath = "", Save = False):
-    #plt.rc("font", size=12)
     AxesList = []
     for i in range(1,len(Columns)):
         ax = sns.regplot(data=DataDF, x=Columns[0], y=Columns[i], ci=None, line_kws={"color":"k"})
@@ -104,12 +90,13 @@ def plotAllReg(DataDF,Columns, Obj:ClusterSampler = None, SavePath = "", Save = 
             ax.text(0, 1.03, f"Correlation: {Correlation:.3f}", transform=ax.transAxes)
         AxesList.append(ax)
         if Save and (len(SavePath) > 0):
-            plt.pyplot.savefig(f'SavePath{i}')
+            plt.pyplot.savefig(f'{SavePath}{i}')
         plt.pyplot.show()
     return AxesList
 
-
-def PlotTopology(Obj:ClusterSampler, SavePath = "", Round = -1, Save = False):
+# Function used to plot clustered nodes in their positions
+# Arguments(Cluster sampler object, Round to take data from, Save path, Bool specifying if to save or not)
+def plotTopology(Obj:ClusterSampler, Round = -1, SavePath = "", Save = False):
     PointsX = [Obj.ObjPop.Pos[i][0] for i in range(len(Obj.ObjPop.Pos))]
     PointsY = [Obj.ObjPop.Pos[i][1] for i in range(len(Obj.ObjPop.Pos))]
     _,_,_,_,_,Labels = Obj.ClusterAll(Round)
@@ -123,7 +110,7 @@ def PlotTopology(Obj:ClusterSampler, SavePath = "", Round = -1, Save = False):
         R = Round
     ax.text(0, 1.03, f"Round {(R)}", transform=ax.transAxes)
     if Save and (len(SavePath) > 0):
-        plt.pyplot.savefig(SavePath)
+        plt.pyplot.savefig(SavePath + ".png")
     plt.pyplot.show()
     return ax, DF
 
