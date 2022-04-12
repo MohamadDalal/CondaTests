@@ -1,6 +1,6 @@
 from CorrRoundingError2 import *
 
-def main(Reps, Range, Size, Decimals):
+def main(Reps, Range, Size, Decimals, FileName):
     RepsPerCore = Reps//CoresNo
     print(f'Number of cores {CoresNo}')
     print(f'Repititions per core {RepsPerCore}')
@@ -24,12 +24,18 @@ def main(Reps, Range, Size, Decimals):
     #print(len(ReturnDict))
     Errors = [i for i in ReturnDict.values()]
     AllErrors = np.concatenate((Errors))
-    sns.histplot(AllErrors, bins="auto")
-    plt.title(f"Numpy Errors")
+    ax = sns.histplot(AllErrors, bins="auto")
+    ax.text(0, 1.03, f"Range {Range}   Size {Size}   Decimals {Decimals}   Reps {Reps}", transform=ax.transAxes)
+    if len(FileName) > 0:
+        plt.savefig(f'Figures/CorrRoundError/{FileName}.png')
+    else:
+        plt.savefig(f'Figures/CorrRoundError/Temp.png')
+    #plt.title(f"Numpy Errors")
     plt.show()
 
 if __name__ == "__main__":
     Start = perf_counter()
-    main(100000, 1, 1000, 3)
+    # Args(Reps, Range, Size, Decimals)
+    main(100000, 1, 10000, 3, "Decimals3")
     Finish = perf_counter()
     print(f'Time taken by entire process {Finish-Start}')

@@ -50,8 +50,9 @@ class Experiment():
         self.Corrs[2] = np.subtract(self.Corrs[0],self.Corrs[1])
 
     def PlotResults(self, Bins="auto"):
-        sns.histplot(self.Corrs[2], bins=Bins)
-        plt.title(f"Numpy Errors")
+        ax =sns.histplot(self.Corrs[2], bins=Bins)
+        ax.text(0, 1.03, f"Range {self.Range}   Size {self.Size}   Decimals {self.Decimals}   Reps {len(self.Corrs[2])}", transform=ax.transAxes)
+        #plt.title(f"Numpy Errors")
         plt.show()
 
     def MultiRound(self, Repititions):
