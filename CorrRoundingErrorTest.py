@@ -1,6 +1,6 @@
 from CorrRoundingError2 import *
 
-def main(Reps, Range, Size, Decimals, FileName):
+def main(Reps, Range, Size, Decimals, FileName, Func, Mean=0, Correlation=0):
     RepsPerCore = Reps//CoresNo
     print(f'Number of cores {CoresNo}')
     print(f'Repititions per core {RepsPerCore}')
@@ -8,10 +8,13 @@ def main(Reps, Range, Size, Decimals, FileName):
     Manager = mp.Manager()
     ReturnDict = Manager.dict()
     Time1 = perf_counter()
+    #FixCorr = not type(Correlation)==type(None)
+    #print(f'FixCorr is {FixCorr}')
     for i in range(CoresNo):
-        P = mp.Process(target=ParallelRun, args=(ReturnDict, i, RepsPerCore, Range, Size, Decimals,))         # Map function to process
-        Processes.append(P)                                                                       # Append process to list
-        Processes[-1].start()                                                                           # Start the newly appended process
+        P = mp.Process(target=ParallelRun, args=(ReturnDict, i, RepsPerCore, Func,
+                                                 Range, Size, Decimals, Mean, Correlation,))    # Map function to process
+        Processes.append(P)                                                                     # Append process to list
+        Processes[-1].start()                                                                   # Start the newly appended process
         #print(f'Started process {i}')
     Time2 = perf_counter()
     for i in range(len(Processes)):
@@ -22,7 +25,7 @@ def main(Reps, Range, Size, Decimals, FileName):
     print(f'Time taken for all processes to finish = {Time3-Time2}')
     #print(ReturnDict.values())
     #print(len(ReturnDict))
-    Errors = [i for i in ReturnDict.values()]
+    Errors = [i[2] for i in ReturnDict.values()]
     AllErrors = np.concatenate((Errors))
     ax = sns.histplot(AllErrors, bins="auto")
     ax.text(0, 1.03, f"Range {Range}   Size {Size}   Decimals {Decimals}   Reps {Reps}", transform=ax.transAxes)
@@ -32,10 +35,11 @@ def main(Reps, Range, Size, Decimals, FileName):
         plt.savefig(f'Figures/CorrRoundError/Temp.png')
     #plt.title(f"Numpy Errors")
     plt.show()
+    return ReturnDict
 
 if __name__ == "__main__":
     Start = perf_counter()
     # Args(Reps, Range, Size, Decimals)
-    main(100000, 1, 10000, 3, "Decimals3")
+    Res = main(1000, 1, 10000, 3, "Test21", Experiment.Bivariate, Mean=(0,0), Correlation=0.5)
     Finish = perf_counter()
     print(f'Time taken by entire process {Finish-Start}')
