@@ -1,4 +1,7 @@
-from CorrRoundingError2 import *
+from CorrRoundingError3 import *
+import multiprocessing as mp
+
+CoresNo = mp.cpu_count()
 
 def main(Reps, Range, Size, Decimals, FileName, Func, Mean=0, Correlation=0):
     RepsPerCore = Reps//CoresNo
@@ -28,7 +31,8 @@ def main(Reps, Range, Size, Decimals, FileName, Func, Mean=0, Correlation=0):
     Errors = [i[2] for i in ReturnDict.values()]
     AllErrors = np.concatenate((Errors))
     ax = sns.histplot(AllErrors, bins="auto")
-    ax.text(0, 1.03, f"Range {Range}   Size {Size}   Decimals {Decimals}   Reps {Reps}", transform=ax.transAxes)
+    ax.text(0, 1.03, f"Range {Range}   Size {Size}   Decimals {Decimals}   Reps {Reps}"
+                     f"\nMean {Mean}  Correlation {Correlation}  {Func.__name__}", transform=ax.transAxes)
     if len(FileName) > 0:
         plt.savefig(f'Figures/CorrRoundError/{FileName}.png')
     else:
@@ -39,7 +43,16 @@ def main(Reps, Range, Size, Decimals, FileName, Func, Mean=0, Correlation=0):
 
 if __name__ == "__main__":
     Start = perf_counter()
-    # Args(Reps, Range, Size, Decimals)
-    Res = main(1000, 1, 10000, 3, "Test21", Experiment.Bivariate, Mean=(0,0), Correlation=0.5)
+    # Args(Reps, Range, Size, Decimals, Filename, Function, Mean(s), Correlation)
+    Res = main(100000, 0.1, 10000, 3, "Test1122", Experiment.DoubleNormal, Mean=((0.1, 0.9), (0.1, 0.9)))
+    #Res = main(1000, 1, 10000, 3, "Test21", Experiment.Uniform, Mean=0)
+    #Res = main(100000, 1, 10000, 3, "Bivariate/Corr10", Experiment.Bivariate, Mean=(0,0), Correlation=1)
+    #for i in range(11):
+    #    Corr = 0.1*i
+    #    main(100000, 1, 10000, 3, f"Bivariate/Corr{i}", Experiment.Bivariate, Mean=(0, 0), Correlation=Corr)
+    #for i in range(10):
+    #    Mean2 = 0.1*(i+1)
+    #    Mean2 = np.round(Mean2, 1)
+    #    Res = main(100000, 0.1, 10000, 3, f"DoubleNormal/2ndMeans2{i}", Experiment.DoubleNormal, Mean=((0, Mean2), (0, Mean2)))
     Finish = perf_counter()
     print(f'Time taken by entire process {Finish-Start}')

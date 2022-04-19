@@ -5,7 +5,7 @@ import seaborn as sns
 
 class Experiment():
 
-    def __init__(self, Range, Size, Decimals, Mean=0, Correlation=0, Seed=39916801, Debug=False):
+    def __init__(self, Range, Size, Decimals, Mean, Correlation=0, Seed=39916801, Debug=False):
         self.Corrs = [[], [], []]
         self.CorrCols = ("RealNumpy", "RoundedNumpy", "ErrorNumpy")
         self.Range = Range
@@ -18,6 +18,14 @@ class Experiment():
         if self.Debug:
             self.Data = [[], [], [], []]
             self.DataCols = ("RealX", "RoundedX", "RealY", "RoundedY")
+
+    def PlotResults(self, Vals, Bins="auto", Title="Generic Title"):
+        ax = sns.histplot(Vals, bins=Bins)
+        #ax.text(0, 1.03,
+        #        f"Range {self.Range}   Size {self.Size}   Decimals {self.Decimals}   Reps {len(self.Corrs[2])}",
+        #        transform=ax.transAxes)
+        plt.title(Title)
+        plt.show()
 
     def UpdateCorrs(self, Corrs):
         for i in range(len(Corrs)):
@@ -37,6 +45,26 @@ class Experiment():
         Generator = self.RNG
         RealX = Generator.normal(self.Mean, self.Range, self.Size)
         RealY = Generator.normal(self.Mean, self.Range, self.Size)
+        return RealX, RealY
+
+    def DoubleNormal(self):
+        def GetTemp():
+            Temp = np.zeros(self.Size//2)
+            if self.Size%2:
+                Temp = np.concatenate((Temp, np.ones((self.Size // 2) + 1)))
+            else:
+                Temp = np.concatenate((Temp, np.ones(self.Size // 2)))
+            self.RNG.shuffle(Temp)
+            return Temp
+        def GenRandomArr(FirstMean, SecondMean):
+            Real = self.RNG.normal(FirstMean, self.Range)
+            ShiftFactor = FirstMean-SecondMean
+            ShiftArr = GetTemp()
+            ShiftArr *= ShiftFactor
+            Real -= ShiftArr
+            return Real
+        RealX = GenRandomArr(self.Mean[0][0], self.Mean[0][1])
+        RealY = GenRandomArr(self.Mean[1][0], self.Mean[1][1])
         return RealX, RealY
 
     def Bivariate(self):
@@ -63,14 +91,6 @@ class Experiment():
 
     def CalculateErrors(self):
         self.Corrs[2] = np.subtract(self.Corrs[0], self.Corrs[1])
-
-    def PlotResults(self, Bins="auto"):
-        ax = sns.histplot(self.Corrs[2], bins=Bins)
-        ax.text(0, 1.03,
-                f"Range {self.Range}   Size {self.Size}   Decimals {self.Decimals}   Reps {len(self.Corrs[2])}",
-                transform=ax.transAxes)
-        # plt.title(f"Numpy Errors")
-        plt.show()
 
     def MultiRound(self, Func, Repititions):
         for i in range(Repititions):
